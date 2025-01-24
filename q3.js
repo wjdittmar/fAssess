@@ -18,6 +18,40 @@ function yap(message, error) {
   console.error(`${message}`, error);
 }
 
+// suggested usage from prompt
+
+const user = skibidi(async () => {
+  await UserModel.findOne((user) => user.id === userId);
+}).lowKey((error) => {
+  yap("Error finding user", error);
+});
+
+// correct usage
+
+// await the results of the call
+const user = await skibidi(async () => {
+  // return the results
+  // use the correct parameter for findOne  
+  return await UserModel.findOne({ id: userId });
+  }).low((error) => {
+    yap("Error finding user", error);
+  });
+
+// or using then syntax
+
+skibidi(async () => {
+  return await UserModel.findOne({ id: userId });
+})
+.low((error) => {
+  yap("Error finding user", error);
+})
+.then((user) => {
+  console.log("User in .then:", user);
+})
+.catch((err) => {
+  console.error("Unhandled error:", err);
+});
+
 // sample distributed version
 import axios from "axios";
 

@@ -8,23 +8,45 @@ const ResultSchema = new mongoose.Schema({
 // Instantiate the model to access the Result collection in DB
 const ResultModel = mongoose.model("Result", ResultSchema);
 
+const POSSIBLE_PATIENT_IDS = [1, 2, 3, 4, 5];
+const POSSIBLE_FIELDS = ["a", "b", "c"];
+
+const DEFAULT_VALUE = "";
+
 async function getTableData(clinicId) {
   // part 1
   const dpList = await ResultModel.find({ clinic_id: clinicId }).exec();
 
   // part 2
-  const dynamicList = [];
-  let rowMap;
-  let prevRowId = -1;
-  for (const dp of dpList) {
-    if (dp.patient_id !== prevRowId) {
-      rowMap = new Map();
-      dynamicList.push(rowMap);
-    }
-    prevRowId = dp.patient_id;
+  const lookup = {};
 
-    rowMap.set(dp.field_nm, dp.field_value);
+  for (const dp of dpList) {
+    if (!lookup[dp.patient_id]) {
+      lookup[dp.patient_id] = {};
+    }
+
+    lookup[dp.patient_id][dp.field_nm] = dp.field_value;
   }
+
+  const dynamicList = POSSIBLE_PATIENT_IDS.map((pid) => {
+    const row = {
+      patient_id: pid,
+      a: DEFAULT_VALUE,
+      b: DEFAULT_VALUE,
+      c: DEFAULT_VALUE,
+    };
+
+    const dataForPatient = lookup[pid];
+    if (dataForPatient) {
+      POSSIBLE_FIELDS.forEach((field) => {
+        if (field in dataForPatient) {
+          row[field] = dataForPatient[field];
+        }
+      });
+    }
+
+    return row;
+  });
 
   return dynamicList;
 }
